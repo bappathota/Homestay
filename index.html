@@ -290,16 +290,23 @@ async function loadAvailability(date){
   $("list").innerHTML="";
   for(let i=1;i<=TOTAL_ROOMS;i++){
     const b=data.find(x=>x.room_no==i&&x.status==="Booked"&&date>=toDate(x.check_in)&&date<=toDate(x.check_out));
-    let action="-";
-    if (b) {
+    let action = "-";
+
+if (b) {
+  // View is ALWAYS visible
   action = `
-    <button class="toggle-btn" onclick="viewBooking('${b.booking_id}')">View</button>
+    <button class="primary" onclick="viewBooking('${b.booking_id}')">View</button>
   `;
-    if(adminUnlocked&&b){
-      action=`
+
+  // Edit & Cancel ONLY for admin
+  if (adminUnlocked) {
+    action += `
       <button class="edit" onclick="editBooking('${b.booking_id}')">Edit</button>
-      <button class="warn" onclick="openCancel('${b.booking_id}')">Cancel</button>`;
-    }
+      <button class="warn" onclick="openCancel('${b.booking_id}')">Cancel</button>
+    `;
+  }
+}
+
     $("list").innerHTML+=`
     <tr>
       <td>Room ${i}</td>
@@ -407,5 +414,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 </body>
 </html>
+
 
 
