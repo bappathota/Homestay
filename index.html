@@ -15,14 +15,10 @@ body {
   font-family:system-ui;
   background:
     linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.45)),
-    url("https://raw.githubusercontent.com/bappathota/Homestay/main/Image.jpeg");
+    url("https://raw.githubusercontent.com/bappathota/Homestay/main/bappathota_Background.jpeg");
   background-size:cover;
 }
 h1 { color:white; text-align:center; }
-
-  <button id="adminLoginBtn" class="toggle-btn" type="button" onclick="openAdminModal()">
-🔐 Admin Login
-</button>
 
 .container {
   background:white;
@@ -51,7 +47,7 @@ th,td { padding:8px; border:1px solid #ddd; text-align:center; }
 .available { color:green; }
 .booked { color:red; }
 
-/* ===== MODAL ===== */
+/* MODAL */
 .modal-overlay {
   position:fixed;
   inset:0;
@@ -91,6 +87,11 @@ th,td { padding:8px; border:1px solid #ddd; text-align:center; }
 
 <div class="container">
 
+<!-- ✅ ADMIN LOGIN BUTTON -->
+<button id="adminLoginBtn" class="toggle-btn" onclick="openAdminModal()">
+🔐 Admin Login
+</button>
+
 <button id="addBookingBtn" class="toggle-btn" style="display:none;">
 ➕ Add New Booking
 </button>
@@ -118,28 +119,24 @@ th,td { padding:8px; border:1px solid #ddd; text-align:center; }
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbyNAx2Tuc3tn2pLg3OVBJ2Cu5iRPn7EnQ-QrscSUC1JQ9s6hgpTecJiZQuS4M3TYRCJ3g/exec";
 const TOTAL_ROOMS = 2;
-const ADMIN_TIMEOUT = 15 * 60 * 1000;
+
+const guest = document.getElementById("guest");
+const phone = document.getElementById("phone");
+const guests = document.getElementById("guests");
+const room = document.getElementById("room");
+const checkin = document.getElementById("checkin");
+const checkout = document.getElementById("checkout");
+const list = document.getElementById("list");
 
 let adminUnlocked = sessionStorage.getItem("adminUnlocked")==="1";
-let adminTimer=null;
 
-/* ===== ADMIN ===== */
+/* ADMIN */
 function openAdminModal(){
   document.getElementById("adminModal").classList.add("show");
   document.getElementById("adminError").textContent="";
 }
 function closeAdminModal(){
   document.getElementById("adminModal").classList.remove("show");
-}
-function startAdminTimer(){
-  clearTimeout(adminTimer);
-  adminTimer=setTimeout(logoutAdmin, ADMIN_TIMEOUT);
-}
-function logoutAdmin(){
-  adminUnlocked=false;
-  sessionStorage.removeItem("adminUnlocked");
-  document.getElementById("addBookingBtn").style.display="none";
-  alert("Admin session expired");
 }
 function verifyAdminPin(){
   const pin=document.getElementById("adminPin").value;
@@ -153,24 +150,20 @@ function verifyAdminPin(){
       adminUnlocked=true;
       sessionStorage.setItem("adminUnlocked","1");
       document.getElementById("addBookingBtn").style.display="block";
-      startAdminTimer();
+      document.getElementById("adminLoginBtn").style.display="none";
       closeAdminModal();
       loadToday();
     });
 }
 
-/* ===== UI ===== */
 document.getElementById("addBookingBtn").onclick=()=>{
-  if(!adminUnlocked) return openAdminModal();
   document.getElementById("addBookingForm").classList.toggle("show");
 };
 
 function initRooms(){
-  const room=document.getElementById("room");
   for(let i=1;i<=TOTAL_ROOMS;i++)
     room.innerHTML+=`<option value="${i}">Room ${i}</option>`;
 }
-
 function toDateOnly(d){ return new Date(d).toISOString().split("T")[0]; }
 
 async function loadAvailability(date){
@@ -187,7 +180,6 @@ async function loadAvailability(date){
     </tr>`;
   }
 }
-
 function loadToday(){
   loadAvailability(new Date().toISOString().split("T")[0]);
 }
@@ -205,28 +197,20 @@ async function addBooking(){
     check_out:checkout.value
   });
 
-  const res=await fetch(API_URL,{method:"POST",body:data});
-  const r=await res.json();
+  const r=await fetch(API_URL,{method:"POST",body:data}).then(r=>r.json());
   if(!r.success) return alert(r.message);
-
-  alert("Booking added");
   loadToday();
 }
 
-/* ===== INIT ===== */
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded",()=>{
   initRooms();
   loadToday();
-  searchDate.value = new Date().toISOString().split("T")[0];
-
-  // Restore admin session
-  if (sessionStorage.getItem("adminUnlocked") === "1") {
-    adminUnlocked = true;
-    document.getElementById("addBookingBtn").style.display = "block";
+  if(adminUnlocked){
+    document.getElementById("addBookingBtn").style.display="block";
+    document.getElementById("adminLoginBtn").style.display="none";
   }
 });
 </script>
 
 </body>
 </html>
-
