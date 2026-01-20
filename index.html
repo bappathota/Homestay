@@ -2,437 +2,223 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BappaThota Homestay – Booking Tracker</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2980b9">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="BappaThota">
 <link rel="apple-touch-icon" href="icon-192.png">
 
-
 <style>
-/* ===== BASE ===== */
 body {
-  font-family: "Segoe UI", system-ui, sans-serif;
-  margin: 0;
-  min-height: 100vh;
+  margin:0;
+  font-family:system-ui;
   background:
-    linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
+    linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.45)),
     url("https://raw.githubusercontent.com/bappathota/Homestay/main/Image.jpeg");
-  background-size: cover;
-  background-position: center;
+  background-size:cover;
 }
+h1 { color:white; text-align:center; }
 
-h1 {
-  text-align: center;
-  color: #fff;
-  margin: 25px 0;
-  font-size: 32px;
-  letter-spacing: 1px;
-}
-
-/* ===== CONTAINER ===== */
 .container {
-  background: rgba(255,255,255,0.95);
-  max-width: 950px;
-  margin: auto;
-  padding: 20px;
-  border-radius: 14px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-  min-height: 44px;
+  background:white;
+  max-width:950px;
+  margin:auto;
+  padding:20px;
+  border-radius:14px;
 }
 
-/* ===== BUTTONS ===== */
 button {
-  border: none;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all .25s ease;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
 }
 
-button:active { transform: scale(0.97); }
-
-.toggle-btn {
-  background: linear-gradient(135deg, #2980b9, #3498db);
-  color: white;
-}
-
-.toggle-btn:hover {
-  background: linear-gradient(135deg, #1f6fa5, #2e86de);
-}
-
-.confirm-btn {
-  background: #27ae60;
-  color: white;
-}
-
-.confirm-btn:hover { background:#1f8f4d; }
-
-.edit-btn { background:#f39c12; color:white; }
+.toggle-btn { background:#2980b9; color:white; }
+.confirm-btn { background:#27ae60; color:white; }
 .cancel-btn { background:#e74c3c; color:white; }
 
-/* ===== FORM ===== */
-.add-booking {
-  display:none;
-  margin-top:15px;
-  animation: slideDown .3s ease;
-}
-
+.add-booking { display:none; }
 .add-booking.show { display:block; }
 
-@keyframes slideDown {
-  from { opacity:0; transform:translateY(-10px); }
-  to { opacity:1; transform:translateY(0); }
-}
+table { width:100%; border-collapse:collapse; }
+th,td { padding:8px; border:1px solid #ddd; text-align:center; }
+.available { color:green; }
+.booked { color:red; }
 
-input, select {
-  padding:10px;
-  width:100%;
-  margin:6px 0;
-  border-radius:8px;
-  border:1px solid #ccc;
-  background:#f9fbfc;
+/* ===== MODAL ===== */
+.modal-overlay {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
 }
-
-input:focus, select:focus {
-  outline:none;
-  border-color:#3498db;
-  box-shadow:0 0 0 3px rgba(52,152,219,.2);
-}
-
-/* ===== TABLE ===== */
-table {
-  width:100%;
-  border-collapse:collapse;
-  margin-top:15px;
-  border-radius:10px;
-  overflow:hidden;
-}
-
-thead {
-  background:#2c3e50;
-  color:white;
-}
-
-th, td {
-  padding:10px;
+.modal-overlay.show { display:flex; }
+.modal {
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  width:90%;
+  max-width:320px;
   text-align:center;
 }
-
-tbody tr:hover { background:#f4f9ff; }
-
-.available { color:#27ae60; font-weight:600; }
-.booked { color:#e74c3c; font-weight:600; }
-
-/* ===== LAYOUT ===== */
-.two-column {
-  display:flex;
-  gap:20px;
-  margin-top:10px;
-}
-
-@media (max-width:768px){
-  .two-column { flex-direction:column; }
-}
-
-/* ===== CALENDAR ===== */
-#calendarWrapper {
-  display:none;
-  margin-top:15px;
-  padding:15px;
-  background:#f8fafc;
-  border-radius:12px;
-}
-
-.calendar-grid {
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:6px;
-  margin-top:10px;
-  overflow-x: auto;
-}
-
-.calendar-day {
-  background:white;
-  border-radius:8px;
-  padding:8px;
-  min-height:90px;
-  font-size:13px;
-  box-shadow:0 2px 6px rgba(0,0,0,.1);
-}
-
-.calendar-day.booked { background:#fdecea; }
-.calendar-day.available { background:#eafaf1; }
-
-.calendar-date {
-  font-weight:bold;
-  margin-bottom:4px;
-}
+.modal-error { color:red; min-height:18px; }
 </style>
 </head>
 
 <body>
 
+<!-- ADMIN MODAL -->
+<div id="adminModal" class="modal-overlay">
+  <div class="modal">
+    <h3>Admin Login</h3>
+    <input id="adminPin" type="password" maxlength="4" inputmode="numeric" placeholder="4-digit PIN">
+    <div id="adminError" class="modal-error"></div>
+    <button class="confirm-btn" onclick="verifyAdminPin()">Login</button>
+    <button class="cancel-btn" onclick="closeAdminModal()">Cancel</button>
+  </div>
+</div>
+
 <h1>BappaThota Homestay</h1>
 
 <div class="container">
 
-<button id="addBookingBtn" type="button" class="toggle-btn" style="display:none;">
+<button id="addBookingBtn" class="toggle-btn" style="display:none;">
 ➕ Add New Booking
 </button>
 
 <div id="addBookingForm" class="add-booking">
-<h3>Add Booking</h3>
-
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
   <input id="guest" placeholder="Guest Name">
-  <input id="phone" placeholder="Phone Number" maxlength="10" inputmode="numeric">
-</div>
-
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+  <input id="phone" placeholder="Phone (10 digits)" maxlength="10">
   <input id="guests" type="number" min="1" max="4" placeholder="Guests (max 4)">
   <select id="room"></select>
+  <input type="date" id="checkin">
+  <input type="date" id="checkout">
+  <button class="confirm-btn" onclick="addBooking()">Confirm</button>
 </div>
 
-<label>Check-in</label>
-<input type="date" id="checkin">
-
-<label>Check-out</label>
-<input type="date" id="checkout">
-
-<button class="confirm-btn" type="button" onclick="addBooking()">Confirm Booking</button>
-<hr>
-</div>
-
-<div class="two-column">
-<div style="flex:2">
 <h3 id="tableTitle">Today's Availability</h3>
 <table>
 <thead>
-<tr>
-<th>Room</th>
-<th>Status</th>
-<th>Guest</th>
-<th>Phone</th>
-<th>Guests</th>
-<th>Action</th>
-</tr>
+<tr><th>Room</th><th>Status</th><th>Guest</th></tr>
 </thead>
 <tbody id="list"></tbody>
 </table>
-</div>
-
-<div style="flex:1">
-<h3>Check by Date</h3>
-<input type="date" id="searchDate">
-<button type="button" onclick="loadByDate()">Check</button>
-</div>
-</div>
-
-<button id="calendarBtn" class="toggle-btn" type="button" style="margin-top:10px;">
-📅 Monthly Calendar
-</button>
-
-<div id="calendarWrapper">
-<div style="display:flex;justify-content:space-between;align-items:center;">
-<button type="button" onclick="changeMonth(-1)">⬅</button>
-<strong id="monthLabel"></strong>
-<button type="button" onclick="changeMonth(1)">➡</button>
-</div>
-<div id="calendar" class="calendar-grid"></div>
-</div>
 
 </div>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbyNAx2Tuc3tn2pLg3OVBJ2Cu5iRPn7EnQ-QrscSUC1JQ9s6hgpTecJiZQuS4M3TYRCJ3g/exec";
 const TOTAL_ROOMS = 2;
+const ADMIN_TIMEOUT = 15 * 60 * 1000;
 
-let adminUnlocked = false;
-
-const guest = document.getElementById("guest");
-const phone = document.getElementById("phone");
-const guests = document.getElementById("guests");
-const room = document.getElementById("room");
-const checkin = document.getElementById("checkin");
-const checkout = document.getElementById("checkout");
-const list = document.getElementById("list");
-const tableTitle = document.getElementById("tableTitle");
-const searchDate = document.getElementById("searchDate");
-
-document.getElementById("addBookingBtn").onclick = () => {
-  if (!adminUnlocked) return alert("Admin access required");
-  document.getElementById("addBookingForm").classList.toggle("show");
-};
-
-document.getElementById("calendarBtn").onclick = () => {
-  const w = document.getElementById("calendarWrapper");
-  w.style.display = w.style.display === "none" ? "block" : "none";
-  if (w.style.display === "block") renderCalendar();
-};
-
-function initRooms() {
-  room.innerHTML = "";
-  for (let i=1;i<=TOTAL_ROOMS;i++) {
-    room.innerHTML += `<option value="${i}">Room ${i}</option>`;
-  }
-}
-function toDateOnly(value) {
-  return new Date(value).toISOString().split("T")[0];
-}
-
-
-async function addBooking() {
-  if (guests.value > 4) return alert("Max 4 guests allowed");
-  if (!/^\d{10}$/.test(phone.value)) return alert("Phone must be 10 digits");
-
-  const data = new URLSearchParams({
-    guest_name: guest.value,
-    phone: phone.value,
-    no_of_guests: guests.value,
-    room_no: room.value,
-    check_in: checkin.value,
-    check_out: checkout.value
-  });
-
-  const res = await fetch(API_URL, { method:"POST", body:data });
-  const r = await res.json();
-  if (!r.success) return alert(r.message);
-
-  alert("Booking confirmed");
-  document.getElementById("addBookingForm").classList.remove("show");
-  guest.value = phone.value = guests.value = checkin.value = checkout.value = "";
-  loadToday();
-}
-
-async function loadAvailability(date, title) {
-  const res = await fetch(API_URL);
-  const data = await res.json();
-  list.innerHTML = "";
-  tableTitle.textContent = title;
-
-  for (let i=1;i<=TOTAL_ROOMS;i++) {
-    const b = data.find(x =>
-	  x.room_no == i &&
-	  x.status === "Booked" &&
-	  date >= toDateOnly(x.check_in) &&
-	  date <= toDateOnly(x.check_out)
-    );
-
-    let action="-";
-    if (adminUnlocked && b) {
-      action = `
-      <button class="edit-btn" onclick="editBooking('${b.booking_id}')">Edit</button>
-      <button class="cancel-btn" onclick="cancelBooking('${b.booking_id}')">Cancel</button>`;
-    }
-
-    list.innerHTML += `
-    <tr>
-      <td>Room ${i}</td>
-      <td class="${b?'booked':'available'}">${b?'Booked':'Available'}</td>
-      <td>${b?.guest_name||'-'}</td>
-      <td>${b?.phone||'-'}</td>
-      <td>${b?.no_of_guests||'-'}</td>
-      <td>${action}</td>
-    </tr>`;
-  }
-}
-
-function loadToday() {
-  loadAvailability(new Date().toISOString().split("T")[0], "Today's Availability");
-}
-
-function loadByDate() {
-  if (!searchDate.value) return;
-  loadAvailability(searchDate.value, "Availability on "+searchDate.value);
-}
-
-/* ===== CALENDAR ===== */
-let currentMonth = new Date().getMonth();
-let currentYear = new Date().getFullYear();
-
-function changeMonth(d) {
-  currentMonth += d;
-  if (currentMonth<0){currentMonth=11;currentYear--;}
-  if (currentMonth>11){currentMonth=0;currentYear++;}
-  renderCalendar();
-}
-
-async function renderCalendar() {
-  const cal = document.getElementById("calendar");
-  cal.innerHTML = "";
-  document.getElementById("monthLabel").textContent =
-    new Date(currentYear,currentMonth).toLocaleString("default",{month:"long",year:"numeric"});
-
-  const res = await fetch(API_URL);
-  const data = await res.json();
-  const last = new Date(currentYear,currentMonth+1,0).getDate();
-
-  for (let d=1;d<=last;d++) {
-    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-    let roomsHtml="";
-    let anyBooked=false;
-
-    for (let r=1;r<=TOTAL_ROOMS;r++) {
-      const booked = data.find(b =>
-        b.room_no==r && b.status==="Booked" &&
-        dateStr>= toDateOnly(b.check_in) &&
-		dateStr <= toDateOnly(b.check_out)
-      );
-      if (booked) {
-        anyBooked=true;
-        roomsHtml+=`<div style="color:#c0392b">Room ${r}: Booked</div>`;
-      } else {
-        roomsHtml+=`<div style="color:#27ae60">Room ${r}: Available</div>`;
-      }
-    }
-
-    cal.innerHTML+=`
-    <div class="calendar-day ${anyBooked?'booked':'available'}">
-      <div class="calendar-date">${d}</div>
-      ${roomsHtml}
-    </div>`;
-  }
-}
+let adminUnlocked = sessionStorage.getItem("adminUnlocked")==="1";
+let adminTimer=null;
 
 /* ===== ADMIN ===== */
-function requestAdminAccess() {
-  if (!confirm("Are you an admin?")) return;
-  const pin = prompt("Enter Admin PIN");
-  if (!pin) return;
-
+function openAdminModal(){
+  document.getElementById("adminModal").classList.add("show");
+  document.getElementById("adminError").textContent="";
+}
+function closeAdminModal(){
+  document.getElementById("adminModal").classList.remove("show");
+}
+function startAdminTimer(){
+  clearTimeout(adminTimer);
+  adminTimer=setTimeout(logoutAdmin, ADMIN_TIMEOUT);
+}
+function logoutAdmin(){
+  adminUnlocked=false;
+  sessionStorage.removeItem("adminUnlocked");
+  document.getElementById("addBookingBtn").style.display="none";
+  alert("Admin session expired");
+}
+function verifyAdminPin(){
+  const pin=document.getElementById("adminPin").value;
   fetch(`${API_URL}?action=verifyAdmin&pin=${pin}`)
     .then(r=>r.json())
     .then(res=>{
-      if (!res.success) return alert("Invalid PIN");
+      if(!res.success){
+        document.getElementById("adminError").textContent="Invalid PIN";
+        return;
+      }
       adminUnlocked=true;
+      sessionStorage.setItem("adminUnlocked","1");
       document.getElementById("addBookingBtn").style.display="block";
+      startAdminTimer();
+      closeAdminModal();
       loadToday();
     });
 }
 
+/* ===== UI ===== */
+document.getElementById("addBookingBtn").onclick=()=>{
+  if(!adminUnlocked) return openAdminModal();
+  document.getElementById("addBookingForm").classList.toggle("show");
+};
+
+function initRooms(){
+  const room=document.getElementById("room");
+  for(let i=1;i<=TOTAL_ROOMS;i++)
+    room.innerHTML+=`<option value="${i}">Room ${i}</option>`;
+}
+
+function toDateOnly(d){ return new Date(d).toISOString().split("T")[0]; }
+
+async function loadAvailability(date){
+  const data=await fetch(API_URL).then(r=>r.json());
+  list.innerHTML="";
+  for(let i=1;i<=TOTAL_ROOMS;i++){
+    const b=data.find(x=>x.room_no==i &&
+      date>=toDateOnly(x.check_in)&&date<=toDateOnly(x.check_out));
+    list.innerHTML+=`
+    <tr>
+      <td>Room ${i}</td>
+      <td class="${b?'booked':'available'}">${b?'Booked':'Available'}</td>
+      <td>${b?.guest_name||'-'}</td>
+    </tr>`;
+  }
+}
+
+function loadToday(){
+  loadAvailability(new Date().toISOString().split("T")[0]);
+}
+
+async function addBooking(){
+  if(!/^\d{10}$/.test(phone.value)) return alert("Invalid phone");
+  if(guests.value>4) return alert("Max 4 guests");
+
+  const data=new URLSearchParams({
+    guest_name:guest.value,
+    phone:phone.value,
+    no_of_guests:guests.value,
+    room_no:room.value,
+    check_in:checkin.value,
+    check_out:checkout.value
+  });
+
+  const res=await fetch(API_URL,{method:"POST",body:data});
+  const r=await res.json();
+  if(!r.success) return alert(r.message);
+
+  alert("Booking added");
+  loadToday();
+}
+
+/* ===== INIT ===== */
 document.addEventListener("DOMContentLoaded",()=>{
   initRooms();
   loadToday();
-  searchDate.value=new Date().toISOString().split("T")[0];
-  requestAdminAccess();
+  if(adminUnlocked){
+    document.getElementById("addBookingBtn").style.display="block";
+    startAdminTimer();
+  }
 });
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("service-worker.js")
-      .then(() => console.log("Service Worker registered"))
-      .catch(err => console.error("SW registration failed", err));
-  });
-}
-
 </script>
 
 </body>
 </html>
-
