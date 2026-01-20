@@ -212,22 +212,54 @@ $("addBookingBtn").onclick=()=>{
 };
 
 async function addBooking(){
-  if(!/^\d{10}$/.test($("phone").value))return alert("Phone invalid");
-  if($("guests").value>4)return alert("Max 4 guests");
+  if(!/^\d{10}$/.test($("phone").value))
+    return alert("Phone must be 10 digits");
 
-  const fd=new URLSearchParams({
-    guest_name:$("guest").value,
-    phone:$("phone").value,
-    no_of_guests:$("guests").value,
-    room_no:$("room").value,
-    check_in:$("checkin").value,
-    check_out:$("checkout").value
+  if($("guests").value > 4)
+    return alert("Max 4 guests allowed");
+
+  if(!$("guest").value || !$("checkin").value || !$("checkout").value)
+    return alert("All fields are required");
+
+  const fd = new URLSearchParams({
+    action: "add",              // ✅ THIS WAS MISSING
+    guest_name: $("guest").value,
+    phone: $("phone").value,
+    no_of_guests: $("guests").value,
+    room_no: $("room").value,
+    check_in: $("checkin").value,
+    check_out: $("checkout").value
   });
 
-  const r=await fetch(API_URL,{method:"POST",body:fd}).then(r=>r.json());
-  if(!r.success)return alert(r.message);
-  $("addBookingForm").classList.add("hidden");
-  loadToday();
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: fd
+    });
+
+    const result = await res.json();
+
+    if (!result.success) {
+      alert(result.message || "Failed to add booking");
+      return;
+    }
+
+    alert("Booking added successfully");
+
+    // reset form
+    $("addBookingForm").classList.add("hidden");
+    $("guest").value = "";
+    $("phone").value = "";
+    $("guests").value = "";
+    $("checkin").value = "";
+    $("checkout").value = "";
+
+    loadToday(); // refresh table
+
+  } catch (err) {
+    alert("Network error while adding booking");
+    console.error(err);
+  }
 }
 
 /* LOAD */
@@ -320,3 +352,4 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 </body>
 </html>
+
