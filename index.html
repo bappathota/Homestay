@@ -144,6 +144,28 @@ th,td{
   </div>
 </div>
 
+  <!-- VIEW BOOKING MODAL -->
+<div id="viewModal" class="modal-overlay">
+  <div class="modal">
+    <h3>Booking Details</h3>
+
+    <div style="text-align:left;font-size:14px;line-height:1.6">
+      <strong>Guest Name:</strong> <span id="viewGuest"></span><br>
+      <strong>Phone:</strong> <span id="viewPhone"></span><br>
+      <strong>No. of Guests:</strong> <span id="viewGuests"></span><br>
+      <strong>Room:</strong> <span id="viewRoom"></span><br>
+      <strong>Check-in:</strong> <span id="viewCheckin"></span><br>
+      <strong>Check-out:</strong> <span id="viewCheckout"></span><br>
+      <strong>Status:</strong> <span id="viewStatus"></span>
+    </div>
+
+    <div class="modal-actions" style="margin-top:15px">
+      <button class="confirm-btn" onclick="closeViewModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- EDIT MODAL -->
 <div id="editModal" class="modal-overlay">
   <div class="modal">
@@ -269,6 +291,10 @@ async function loadAvailability(date){
   for(let i=1;i<=TOTAL_ROOMS;i++){
     const b=data.find(x=>x.room_no==i&&x.status==="Booked"&&date>=toDate(x.check_in)&&date<=toDate(x.check_out));
     let action="-";
+    if (b) {
+  action = `
+    <button class="toggle-btn" onclick="viewBooking('${b.booking_id}')">View</button>
+  `;
     if(adminUnlocked&&b){
       action=`
       <button class="edit" onclick="editBooking('${b.booking_id}')">Edit</button>
@@ -284,6 +310,35 @@ async function loadAvailability(date){
   }
 }
 function loadToday(){loadAvailability(toDate(new Date()));}
+function viewBooking(id) {
+  fetch(API_URL)
+    .then(r => r.json())
+    .then(data => {
+      const b = data.find(x => x.booking_id === id);
+      if (!b) {
+        alert("Booking not found");
+        return;
+      }
+
+      document.getElementById("viewGuest").textContent = b.guest_name || "-";
+      document.getElementById("viewPhone").textContent = b.phone || "-";
+      document.getElementById("viewGuests").textContent = b.no_of_guests || "-";
+      document.getElementById("viewRoom").textContent = "Room " + b.room_no;
+      document.getElementById("viewCheckin").textContent = formatDate(b.check_in);
+      document.getElementById("viewCheckout").textContent = formatDate(b.check_out);
+      document.getElementById("viewStatus").textContent = b.status || "-";
+
+      document.getElementById("viewModal").classList.add("show");
+    });
+}
+
+function closeViewModal() {
+  document.getElementById("viewModal").classList.remove("show");
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString();
+}
 
 /* EDIT */
 function editBooking(id){
@@ -352,4 +407,5 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 </body>
 </html>
+
 
