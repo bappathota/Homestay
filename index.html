@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BappaThota Homestay</title>
 
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2980b9">
 <link rel="apple-touch-icon" href="icon-192.png">
 
@@ -13,16 +12,15 @@
 body{
   margin:0;
   font-family:system-ui;
-  background:
-    linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),
-    url("https://raw.githubusercontent.com/bappathota/Homestay/main/Image.jpeg");
+  background:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),
+  url("https://raw.githubusercontent.com/bappathota/Homestay/main/Image.jpeg");
   background-size:cover;
 }
 h1{color:#fff;text-align:center;margin:20px 0}
 
 .container{
   background:#fff;
-  max-width:950px;
+  max-width:960px;
   margin:auto;
   padding:20px;
   border-radius:14px;
@@ -35,7 +33,6 @@ button{
   cursor:pointer;
   font-weight:600;
 }
-
 .primary{background:#2980b9;color:#fff}
 .success{background:#27ae60;color:#fff}
 .warn{background:#e74c3c;color:#fff}
@@ -72,7 +69,7 @@ th,td{
   padding:20px;
   border-radius:14px;
   width:90%;
-  max-width:350px;
+  max-width:380px;
   text-align:center;
 }
 .modal input{
@@ -94,7 +91,6 @@ th,td{
 
 <div class="container">
 
-<!-- ADMIN CONTROLS -->
 <button id="adminLoginBtn" class="primary">🔐 Admin Login</button>
 <button id="addBookingBtn" class="primary hidden">➕ Add Booking</button>
 <button id="calendarBtn" class="primary">📅 Calendar</button>
@@ -116,10 +112,10 @@ th,td{
 <table>
 <thead>
 <tr>
-  <th>Room</th>
-  <th>Status</th>
-  <th>Guest</th>
-  <th>Action</th>
+<th>Room</th>
+<th>Status</th>
+<th>Guest</th>
+<th>Action</th>
 </tr>
 </thead>
 <tbody id="list"></tbody>
@@ -135,15 +131,31 @@ th,td{
 
 </div>
 
-<!-- ADMIN LOGIN MODAL -->
+<!-- ADMIN LOGIN -->
 <div id="adminModal" class="modal-overlay">
   <div class="modal">
     <h3>Admin Login</h3>
     <input id="adminPin" type="password" maxlength="4" placeholder="4-digit PIN">
     <div id="adminError" style="color:red"></div>
     <div class="modal-actions">
-      <button class="warn" onclick="closeAdminModal()">Cancel</button>
+      <button class="warn" onclick="closeAdmin()">Cancel</button>
       <button class="success" onclick="verifyAdmin()">Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal">
+    <h3>Edit Booking</h3>
+    <input id="editGuest">
+    <input id="editPhone">
+    <input id="editGuests" type="number" min="1" max="4">
+    <input id="editCheckin" type="date">
+    <input id="editCheckout" type="date">
+    <div class="modal-actions">
+      <button class="warn" onclick="closeEdit()">Cancel</button>
+      <button class="success" onclick="saveEdit()">Save</button>
     </div>
   </div>
 </div>
@@ -164,15 +176,15 @@ const API_URL="https://script.google.com/macros/s/AKfycbyNAx2Tuc3tn2pLg3OVBJ2Cu5
 const TOTAL_ROOMS=2;
 
 let adminUnlocked=false;
+let editData=null;
 let cancelId=null;
 
 const $=id=>document.getElementById(id);
-
-function toDate(d){return new Date(d).toISOString().split("T")[0];}
+const toDate=d=>new Date(d).toISOString().split("T")[0];
 
 /* ADMIN */
 $("adminLoginBtn").onclick=()=>$("adminModal").classList.add("show");
-function closeAdminModal(){$("adminModal").classList.remove("show")}
+function closeAdmin(){$("adminModal").classList.remove("show")}
 function verifyAdmin(){
   fetch(`${API_URL}?action=verifyAdmin&pin=${$("adminPin").value}`)
   .then(r=>r.json())
@@ -181,47 +193,24 @@ function verifyAdmin(){
     adminUnlocked=true;
     $("adminLoginBtn").classList.add("hidden");
     $("addBookingBtn").classList.remove("hidden");
-    closeAdminModal();
+    closeAdmin();
     loadToday();
   });
 }
 
-/* UI */
-$("addBookingBtn").onclick=()=>{
-  if(!adminUnlocked) return $("adminModal").classList.add("show");
-  $("addBookingForm").classList.toggle("hidden");
-};
-$("calendarBtn").onclick=()=>{$("calendarWrapper").classList.toggle("hidden");renderCalendar();}
-
-/* INIT ROOMS */
+/* INIT */
 function initRooms(){
   $("room").innerHTML="";
-  for(let i=1;i<=TOTAL_ROOMS;i++)$("room").innerHTML+=`<option>${i}</option>`;
+  for(let i=1;i<=TOTAL_ROOMS;i++)
+    $("room").innerHTML+=`<option>${i}</option>`;
 }
-
-/* LOAD TABLE */
-async function loadAvailability(date){
-  const data=await fetch(API_URL).then(r=>r.json());
-  $("list").innerHTML="";
-  for(let i=1;i<=TOTAL_ROOMS;i++){
-    const b=data.find(x=>x.room_no==i && x.status==="Booked" && date>=toDate(x.check_in)&&date<=toDate(x.check_out));
-    let action="-";
-    if(adminUnlocked && b){
-      action=`<button class="edit" onclick="editBooking('${b.booking_id}')">Edit</button>
-              <button class="warn" onclick="openCancel('${b.booking_id}')">Cancel</button>`;
-    }
-    $("list").innerHTML+=`
-    <tr>
-      <td>Room ${i}</td>
-      <td class="${b?'booked':'available'}">${b?'Booked':'Available'}</td>
-      <td>${b?.guest_name||'-'}</td>
-      <td>${action}</td>
-    </tr>`;
-  }
-}
-function loadToday(){loadAvailability(toDate(new Date()));}
 
 /* ADD */
+$("addBookingBtn").onclick=()=>{
+  if(!adminUnlocked)return $("adminModal").classList.add("show");
+  $("addBookingForm").classList.toggle("hidden");
+};
+
 async function addBooking(){
   if(!/^\d{10}$/.test($("phone").value))return alert("Phone invalid");
   if($("guests").value>4)return alert("Max 4 guests");
@@ -234,20 +223,64 @@ async function addBooking(){
     check_in:$("checkin").value,
     check_out:$("checkout").value
   });
+
   const r=await fetch(API_URL,{method:"POST",body:fd}).then(r=>r.json());
   if(!r.success)return alert(r.message);
-  alert("Booking Added");
   $("addBookingForm").classList.add("hidden");
   loadToday();
 }
 
-/* EDIT (simple) */
+/* LOAD */
+async function loadAvailability(date){
+  const data=await fetch(API_URL).then(r=>r.json());
+  $("list").innerHTML="";
+  for(let i=1;i<=TOTAL_ROOMS;i++){
+    const b=data.find(x=>x.room_no==i&&x.status==="Booked"&&date>=toDate(x.check_in)&&date<=toDate(x.check_out));
+    let action="-";
+    if(adminUnlocked&&b){
+      action=`
+      <button class="edit" onclick="editBooking('${b.booking_id}')">Edit</button>
+      <button class="warn" onclick="openCancel('${b.booking_id}')">Cancel</button>`;
+    }
+    $("list").innerHTML+=`
+    <tr>
+      <td>Room ${i}</td>
+      <td class="${b?'booked':'available'}">${b?'Booked':'Available'}</td>
+      <td>${b?.guest_name||'-'}</td>
+      <td>${action}</td>
+    </tr>`;
+  }
+}
+function loadToday(){loadAvailability(toDate(new Date()));}
+
+/* EDIT */
 function editBooking(id){
-  if(!adminUnlocked)return;
-  const name=prompt("Guest Name");
-  if(!name)return;
-  const fd=new URLSearchParams({action:"update",booking_id:id,guest_name:name});
-  fetch(API_URL,{method:"POST",body:fd}).then(()=>loadToday());
+  fetch(API_URL).then(r=>r.json()).then(data=>{
+    editData=data.find(x=>x.booking_id===id);
+    if(!editData)return;
+    $("editGuest").value=editData.guest_name;
+    $("editPhone").value=editData.phone;
+    $("editGuests").value=editData.no_of_guests;
+    $("editCheckin").value=toDate(editData.check_in);
+    $("editCheckout").value=toDate(editData.check_out);
+    $("editModal").classList.add("show");
+  });
+}
+function closeEdit(){$("editModal").classList.remove("show")}
+function saveEdit(){
+  const fd=new URLSearchParams({
+    action:"update",
+    booking_id:editData.booking_id,
+    guest_name:$("editGuest").value,
+    phone:$("editPhone").value,
+    no_of_guests:$("editGuests").value,
+    room_no:editData.room_no,
+    check_in:$("editCheckin").value,
+    check_out:$("editCheckout").value
+  });
+  fetch(API_URL,{method:"POST",body:fd}).then(()=>{
+    closeEdit();loadToday();
+  });
 }
 
 /* CANCEL */
@@ -260,6 +293,7 @@ function confirmCancel(){
 
 /* CALENDAR */
 let cm=new Date().getMonth(),cy=new Date().getFullYear();
+$("calendarBtn").onclick=()=>{$("calendarWrapper").classList.toggle("hidden");renderCalendar();}
 function changeMonth(d){cm+=d;if(cm<0){cm=11;cy--}if(cm>11){cm=0;cy++}renderCalendar()}
 async function renderCalendar(){
   $("calendar").innerHTML="";
@@ -270,14 +304,14 @@ async function renderCalendar(){
     const date=`${cy}-${String(cm+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
     let html="";
     for(let r=1;r<=TOTAL_ROOMS;r++){
-      const b=data.find(x=>x.room_no==r && date>=toDate(x.check_in)&&date<=toDate(x.check_out));
-      html+=`<div>${r}: ${b?'❌':'✅'}</div>`;
+      const b=data.find(x=>x.room_no==r&&date>=toDate(x.check_in)&&date<=toDate(x.check_out));
+      html+=`<div>Room ${r}: ${b?'❌':'✅'}</div>`;
     }
     $("calendar").innerHTML+=`<div style="border:1px solid #ccc;padding:6px">${d}<br>${html}</div>`;
   }
 }
 
-/* INIT */
+/* START */
 document.addEventListener("DOMContentLoaded",()=>{
   initRooms();
   loadToday();
