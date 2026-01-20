@@ -20,6 +20,10 @@ body {
 }
 h1 { color:white; text-align:center; }
 
+  <button id="adminLoginBtn" class="toggle-btn" type="button" onclick="openAdminModal()">
+🔐 Admin Login
+</button>
+
 .container {
   background:white;
   max-width:950px;
@@ -210,15 +214,19 @@ async function addBooking(){
 }
 
 /* ===== INIT ===== */
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
   initRooms();
   loadToday();
-  if(adminUnlocked){
-    document.getElementById("addBookingBtn").style.display="block";
-    startAdminTimer();
+  searchDate.value = new Date().toISOString().split("T")[0];
+
+  // Restore admin session
+  if (sessionStorage.getItem("adminUnlocked") === "1") {
+    adminUnlocked = true;
+    document.getElementById("addBookingBtn").style.display = "block";
   }
 });
 </script>
 
 </body>
 </html>
+
