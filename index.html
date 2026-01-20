@@ -5,31 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BappaThota Homestay</title>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2980b9">
-<link rel="apple-touch-icon" href="icon-192.png">
-
 <style>
 body{
   margin:0;
-  font-family:system-ui, Arial;
-  background:
-    linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.45)),
-    url("https://raw.githubusercontent.com/bappathota/Homestay/main/bappathota_Background.jpeg");
-  background-size:cover;
+  font-family:system-ui;
+  background:#2c2c2c;
 }
-h1{
-  text-align:center;
-  color:white;
-  margin:20px 0;
-}
+h1{color:white;text-align:center;margin:20px 0;}
+
 .container{
   background:white;
-  max-width:980px;
+  max-width:1000px;
   margin:auto;
   padding:20px;
   border-radius:14px;
 }
+
 button{
   padding:10px 14px;
   border:none;
@@ -37,298 +28,242 @@ button{
   cursor:pointer;
   font-weight:600;
 }
-.primary{ background:#2980b9; color:white; }
-.success{ background:#27ae60; color:white; }
-.warn{ background:#f39c12; color:white; }
-.danger{ background:#e74c3c; color:white; }
+.primary{background:#2980b9;color:white;}
+.success{background:#27ae60;color:white;}
+.warn{background:#f39c12;color:white;}
+.danger{background:#e74c3c;color:white;}
 
-.add-booking{ display:none; margin:10px 0; }
-.add-booking.show{ display:block; }
-
-input, select{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
+.hidden{display:none;}
 
 table{
   width:100%;
   border-collapse:collapse;
-  margin-top:10px;
+  margin-top:15px;
 }
-th, td{
+th,td{
   border:1px solid #ddd;
   padding:8px;
   text-align:center;
 }
-.available{ color:green; font-weight:600; }
-.booked{ color:red; font-weight:600; }
+.booked{color:red;font-weight:600;}
+.available{color:green;font-weight:600;}
 
-/* MODAL */
-.modal-overlay{
+/* modal */
+.modal-bg{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.6);
+  background:rgba(0,0,0,.5);
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:999;
 }
-.modal-overlay.show{ display:flex; }
 .modal{
   background:white;
   padding:20px;
-  border-radius:14px;
+  border-radius:12px;
   width:90%;
-  max-width:320px;
-  text-align:center;
-}
-.modal-error{ color:red; min-height:18px; }
-
-/* CALENDAR */
-#calendarWrapper{
-  display:none;
-  margin-top:15px;
-}
-.calendar{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:6px;
-}
-.day{
-  background:#f9f9f9;
-  padding:6px;
-  border-radius:6px;
-  font-size:13px;
+  max-width:350px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ADMIN LOGIN MODAL -->
-<div id="adminModal" class="modal-overlay">
+<h1>BappaThota Homestay</h1>
+
+<!-- ADMIN MODAL -->
+<div id="adminModal" class="modal-bg">
   <div class="modal">
     <h3>Admin Login</h3>
-    <input id="adminPin" type="password" maxlength="4" inputmode="numeric" placeholder="4-digit PIN">
-    <div id="adminError" class="modal-error"></div>
-    <button class="success" onclick="verifyAdminPin()">Login</button>
-    <button class="danger" onclick="closeAdminModal()">Cancel</button>
+    <input id="adminPin" type="password" maxlength="4" placeholder="4 digit PIN" style="width:100%;padding:10px;">
+    <p id="adminErr" style="color:red"></p>
+    <button class="success" onclick="verifyAdmin()">Login</button>
+    <button class="danger" onclick="closeAdmin()">Cancel</button>
   </div>
 </div>
 
-<h1>BappaThota Homestay</h1>
-
 <div class="container">
 
-<button id="adminLoginBtn" class="primary" onclick="openAdminModal()">🔐 Admin Login</button>
-<button id="addBookingBtn" class="primary" style="display:none;">➕ Add New Booking</button>
+<button id="adminBtn" class="primary">🔐 Admin Login</button>
+<button id="addBtn" class="primary hidden">➕ Add / Edit Booking</button>
 
-<div id="addBookingForm" class="add-booking">
-  <input id="guest" placeholder="Guest Name">
-  <input id="phone" placeholder="Phone (10 digits)" maxlength="10">
-  <input id="guests" type="number" min="1" max="4" placeholder="Guests (max 4)">
-  <select id="room"></select>
-  <input type="date" id="checkin">
-  <input type="date" id="checkout">
-  <button class="success" onclick="addBooking()">Confirm Booking</button>
+<!-- FORM -->
+<div id="formBox" class="hidden">
+  <h3 id="formTitle">Add Booking</h3>
+  <input id="guest" placeholder="Guest Name"><br>
+  <input id="phone" placeholder="Phone (10 digits)"><br>
+  <input id="guests" type="number" min="1" max="4" placeholder="Guests (max 4)"><br>
+  <select id="room"></select><br>
+  <label>Check-in</label>
+  <input type="date" id="checkin"><br>
+  <label>Check-out</label>
+  <input type="date" id="checkout"><br><br>
+  <button class="success" onclick="saveBooking()">Save</button>
 </div>
 
-<h3 id="tableTitle">Today's Availability</h3>
+<h3 id="title">Today's Availability</h3>
 <table>
 <thead>
 <tr>
-  <th>Room</th>
-  <th>Status</th>
-  <th>Guest</th>
-  <th>Action</th>
+<th>Room</th>
+<th>Status</th>
+<th>Guest</th>
+<th>Action</th>
 </tr>
 </thead>
 <tbody id="list"></tbody>
 </table>
 
-<br>
-<button class="primary" onclick="toggleCalendar()">📅 Monthly Calendar</button>
-
-<div id="calendarWrapper">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0;">
-    <button onclick="changeMonth(-1)">⬅</button>
-    <strong id="monthLabel"></strong>
-    <button onclick="changeMonth(1)">➡</button>
-  </div>
-  <div id="calendar" class="calendar"></div>
-</div>
+<h3 style="margin-top:30px;">📅 Monthly Calendar</h3>
+<div id="calendar"></div>
 
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyNAx2Tuc3tn2pLg3OVBJ2Cu5iRPn7EnQ-QrscSUC1JQ9s6hgpTecJiZQuS4M3TYRCJ3g/exec";
-const TOTAL_ROOMS = 2;
+const API_URL="https://script.google.com/macros/s/AKfycbyNAx2Tuc3tn2pLg3OVBJ2Cu5iRPn7EnQ-QrscSUC1JQ9s6hgpTecJiZQuS4M3TYRCJ3g/exec";
+const ROOMS=2;
 
-let adminUnlocked = sessionStorage.getItem("adminUnlocked")==="1";
+let admin=false;
+let editingId=null;
 
-/* ELEMENTS */
-const guest = document.getElementById("guest");
-const phone = document.getElementById("phone");
-const guests = document.getElementById("guests");
-const room = document.getElementById("room");
-const checkin = document.getElementById("checkin");
-const checkout = document.getElementById("checkout");
-const list = document.getElementById("list");
+// UI refs
+const adminModal=document.getElementById("adminModal");
+const addBtn=document.getElementById("addBtn");
+const formBox=document.getElementById("formBox");
+const list=document.getElementById("list");
 
-/* ADMIN */
-function openAdminModal(){
-  document.getElementById("adminModal").classList.add("show");
-  document.getElementById("adminError").textContent="";
-}
-function closeAdminModal(){
-  document.getElementById("adminModal").classList.remove("show");
-}
-function verifyAdminPin(){
+// admin
+document.getElementById("adminBtn").onclick=()=>adminModal.style.display="flex";
+function closeAdmin(){adminModal.style.display="none";}
+function verifyAdmin(){
   const pin=document.getElementById("adminPin").value;
   fetch(`${API_URL}?action=verifyAdmin&pin=${pin}`)
-    .then(r=>r.json())
-    .then(res=>{
-      if(!res.success){
-        document.getElementById("adminError").textContent="Invalid PIN";
-        return;
-      }
-      adminUnlocked=true;
-      sessionStorage.setItem("adminUnlocked","1");
-      document.getElementById("addBookingBtn").style.display="inline-block";
-      closeAdminModal();
-      loadToday();
-    });
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success){
+      document.getElementById("adminErr").innerText="Invalid PIN";
+      return;
+    }
+    admin=true;
+    addBtn.classList.remove("hidden");
+    adminModal.style.display="none";
+    loadToday();
+  });
 }
 
-/* INIT ROOMS */
+// form
+addBtn.onclick=()=>{
+  editingId=null;
+  document.getElementById("formTitle").innerText="Add Booking";
+  formBox.classList.toggle("hidden");
+};
+
 function initRooms(){
-  room.innerHTML="";
-  for(let i=1;i<=TOTAL_ROOMS;i++){
-    room.innerHTML+=`<option value="${i}">Room ${i}</option>`;
-  }
+  const r=document.getElementById("room");
+  for(let i=1;i<=ROOMS;i++) r.innerHTML+=`<option value="${i}">Room ${i}</option>`;
 }
-function dateOnly(d){ return new Date(d).toISOString().split("T")[0]; }
 
-/* LOAD AVAILABILITY */
+function dateOnly(d){return new Date(d).toISOString().split("T")[0];}
+
+// load table
 async function loadAvailability(date){
-  const data = await fetch(API_URL).then(r=>r.json());
+  const data=await fetch(API_URL).then(r=>r.json());
   list.innerHTML="";
-  for(let i=1;i<=TOTAL_ROOMS;i++){
-    const b=data.find(x =>
-      x.room_no==i &&
-      x.status==="Booked" &&
-      date>=dateOnly(x.check_in) &&
-      date<=dateOnly(x.check_out)
-    );
-
+  for(let i=1;i<=ROOMS;i++){
+    const b=data.find(x=>x.room_no==i && date>=dateOnly(x.check_in) && date<=dateOnly(x.check_out));
     let action="-";
-    if(adminUnlocked && b){
+    if(admin && b){
       action=`
         <button class="warn" onclick="editBooking('${b.booking_id}')">Edit</button>
-        <button class="danger" onclick="cancelBooking('${b.booking_id}')">Cancel</button>
-      `;
+        <button class="danger" onclick="cancelBooking('${b.booking_id}')">Cancel</button>`;
     }
-
     list.innerHTML+=`
-      <tr>
-        <td>Room ${i}</td>
-        <td class="${b?'booked':'available'}">${b?'Booked':'Available'}</td>
-        <td>${b?.guest_name||'-'}</td>
-        <td>${action}</td>
-      </tr>`;
+    <tr>
+      <td>Room ${i}</td>
+      <td class="${b?'booked':'available'}">${b?'Booked':'Available'}</td>
+      <td>${b?.guest_name||'-'}</td>
+      <td>${action}</td>
+    </tr>`;
   }
 }
+
 function loadToday(){
   loadAvailability(new Date().toISOString().split("T")[0]);
 }
 
-/* ADD / EDIT / CANCEL */
-async function addBooking(){
+// add / edit
+async function editBooking(id){
+  const data=await fetch(API_URL).then(r=>r.json());
+  const b=data.find(x=>x.booking_id===id);
+  editingId=id;
+
+  guest.value=b.guest_name;
+  phone.value=b.phone;
+  guests.value=b.no_of_guests;
+  room.value=b.room_no;
+  checkin.value=dateOnly(b.check_in);
+  checkout.value=dateOnly(b.check_out);
+
+  document.getElementById("formTitle").innerText="Edit Booking";
+  formBox.classList.remove("hidden");
+}
+
+async function saveBooking(){
   if(!/^\d{10}$/.test(phone.value)) return alert("Invalid phone");
   if(guests.value>4) return alert("Max 4 guests");
 
-  const data=new URLSearchParams({
+  const payload={
     guest_name:guest.value,
     phone:phone.value,
     no_of_guests:guests.value,
     room_no:room.value,
     check_in:checkin.value,
     check_out:checkout.value
-  });
+  };
+  if(editingId){
+    payload.action="update";
+    payload.booking_id=editingId;
+  }
 
-  const r=await fetch(API_URL,{method:"POST",body:data}).then(r=>r.json());
-  if(!r.success) return alert(r.message);
-  alert("Booking Added");
+  const res=await fetch(API_URL,{method:"POST",body:new URLSearchParams(payload)});
+  const r=await res.json();
+  if(!r.success) return alert("Failed");
+
+  alert(editingId?"Updated":"Added");
+  formBox.classList.add("hidden");
+  editingId=null;
   loadToday();
 }
 
-function editBooking(id){
-  const guest_name=prompt("Guest Name");
-  if(!guest_name) return;
-  const data=new URLSearchParams({action:"update",booking_id:id,guest_name});
-  fetch(API_URL,{method:"POST",body:data})
-    .then(r=>r.json()).then(()=>loadToday());
-}
 function cancelBooking(id){
-  if(!confirm("Cancel booking?")) return;
-  const data=new URLSearchParams({action:"cancel",booking_id:id});
-  fetch(API_URL,{method:"POST",body:data})
-    .then(r=>r.json()).then(()=>loadToday());
+  if(!confirm("Cancel booking?"))return;
+  fetch(API_URL,{method:"POST",body:new URLSearchParams({action:"cancel",booking_id:id})})
+  .then(()=>loadToday());
 }
 
-/* CALENDAR */
-let currentMonth=new Date().getMonth();
-let currentYear=new Date().getFullYear();
-
-function toggleCalendar(){
-  const w=document.getElementById("calendarWrapper");
-  w.style.display=w.style.display==="none"?"block":"none";
-  if(w.style.display==="block") renderCalendar();
-}
-function changeMonth(d){
-  currentMonth+=d;
-  if(currentMonth<0){currentMonth=11;currentYear--;}
-  if(currentMonth>11){currentMonth=0;currentYear++;}
-  renderCalendar();
-}
+// calendar
 async function renderCalendar(){
   const cal=document.getElementById("calendar");
   cal.innerHTML="";
-  document.getElementById("monthLabel").textContent =
-    new Date(currentYear,currentMonth).toLocaleString("default",{month:"long",year:"numeric"});
-
   const data=await fetch(API_URL).then(r=>r.json());
-  const last=new Date(currentYear,currentMonth+1,0).getDate();
+  const d=new Date(),y=d.getFullYear(),m=d.getMonth();
+  const last=new Date(y,m+1,0).getDate();
 
-  for(let d=1;d<=last;d++){
-    const dateStr=`${currentYear}-${String(currentMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+  for(let day=1;day<=last;day++){
+    const ds=`${y}-${String(m+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
     let html="";
-    for(let r=1;r<=TOTAL_ROOMS;r++){
-      const booked=data.find(b=>b.room_no==r && b.status==="Booked" &&
-        dateStr>=dateOnly(b.check_in)&&dateStr<=dateOnly(b.check_out));
-      html+=booked?`<div style="color:red">Room ${r}: Booked</div>`:
-                    `<div style="color:green">Room ${r}: Available</div>`;
+    for(let r=1;r<=ROOMS;r++){
+      const b=data.find(x=>x.room_no==r && ds>=dateOnly(x.check_in)&&ds<=dateOnly(x.check_out));
+      html+=`Room ${r}: ${b?"❌":"✅"}<br>`;
     }
-    cal.innerHTML+=`<div class="day"><strong>${d}</strong>${html}</div>`;
+    cal.innerHTML+=`<div style="border:1px solid #ddd;padding:6px;margin:4px">${day}<br>${html}</div>`;
   }
 }
 
-/* INIT */
-document.getElementById("addBookingBtn").onclick=()=>{
-  if(!adminUnlocked) openAdminModal();
-  else document.getElementById("addBookingForm").classList.toggle("show");
-};
-
-document.addEventListener("DOMContentLoaded",()=>{
-  initRooms();
-  loadToday();
-  if(adminUnlocked){
-    document.getElementById("addBookingBtn").style.display="inline-block";
-  }
-});
+// init
+initRooms();
+loadToday();
+renderCalendar();
 </script>
 
 </body>
